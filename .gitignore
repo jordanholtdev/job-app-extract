@@ -44,3 +44,5 @@ Dockerrun.aws.json
 
 # Ignore the textract output files
 textractoutput.json
+event.json
+comprehend.json

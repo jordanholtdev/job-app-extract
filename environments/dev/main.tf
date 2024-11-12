@@ -23,7 +23,8 @@ provider "aws" {
 module "storage" {
   source      = "../../modules/storage"
   bucket_name = "${var.env}-${var.bucket_name}-source"
-
+  lambda_process_doc_arn = module.serverless.process_doc_lambda_arn
+  lambda_permission_arn = module.serverless.aws_lambda_permission
   tags = merge(var.tags, {
     Name = "storage"
   })
@@ -47,4 +48,5 @@ module "serverless" {
   lambda_role_arn         = module.iam.lambda_role_arn
   textract_sns_topic_name = "AmazonTextract-${var.env}-${var.tags.project}-sns-topic"
   textract_sns_role_arn   = module.iam.textract_role_arn
+  source_bucket_arn       = module.storage.bucket_arn
 }
