@@ -39,7 +39,18 @@ resource "aws_iam_role_policy" "lambda_policy" {
       {
         "Effect": "Allow",
         "Action": [
-          "textract:AmazonTextractFullAccess",
+          "textract:StartDocumentAnalysis",
+				  "textract:GetDocumentAnalysis"
+        ],
+        "Resource": "*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "comprehend:DetectDominantLanguage",
+          "comprehend:DetectEntities",
+          "comprehend:DetectKeyPhrases",
+          "comprehend:DetectSentiment",
         ],
         "Resource": "*"
       },
@@ -56,7 +67,8 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "logs:PutLogEvents"
         ],
         "Resource" : [
-          "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/processdoc:*"
+          "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/processdoc:*",
+          "arn:aws:logs:us-east-1:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/processresult:*"
         ]
       }
     ]

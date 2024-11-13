@@ -1,0 +1,2 @@
+amazon-textract-response-parser==1.0.3
+marshmallow==3.13.0

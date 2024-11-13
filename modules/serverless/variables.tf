@@ -10,3 +10,7 @@ variable "textract_sns_role_arn" {
   description = "The ARN of the IAM role to be assumed by the SNS topic"
   
 }
+
+variable "source_bucket_arn" {
+  description = "The ARN of the S3 bucket to be used as the source of the Lambda function"
+}
