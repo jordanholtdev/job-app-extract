@@ -22,7 +22,7 @@ provider "aws" {
 
 module "storage" {
   source      = "../../modules/storage"
-  bucket_name = "${var.env}-${var.bucket_name}-source"
+  source_bucket_name = "${var.env}-${var.source_bucket_name}"
   lambda_process_doc_arn = module.serverless.process_doc_lambda_arn
   lambda_permission_arn = module.serverless.aws_lambda_permission
   tags = merge(var.tags, {
