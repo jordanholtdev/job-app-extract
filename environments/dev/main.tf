@@ -49,4 +49,5 @@ module "serverless" {
   textract_sns_topic_name = "AmazonTextract-${var.env}-${var.tags.project}-sns-topic"
   textract_sns_role_arn   = module.iam.textract_role_arn
   source_bucket_arn       = module.storage.bucket_arn
+  source_bucket_name      = module.storage.bucket_name
 }
