@@ -25,6 +25,7 @@ resource "aws_lambda_function" "process_doc_lambda" {
     variables = {
       TEXTRACT_SNS_ROLE_ARN  = var.textract_sns_role_arn
       TEXTRACT_SNS_TOPIC_ARN = aws_sns_topic.textract_sns_topic.arn
+      S3_BUCKET            = var.source_bucket_name
     }
   }
 }
@@ -54,9 +55,25 @@ resource "aws_lambda_function" "process_result_lambda" {
   handler       = "index.lambda_handler"
   runtime       = "python3.10"
   timeout       = 120
+
+  environment {
+    variables = {
+      S3_BUCKET = var.source_bucket_name
+    }
+  }
+}
+
+resource "aws_lambda_permission" "sns_invoke_lambda" {
+  statement_id  = "AllowExecutionFromSNS"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.process_result_lambda.function_name
+  principal     = "sns.amazonaws.com"
+  source_arn    = aws_sns_topic.textract_sns_topic.arn
+  
 }
 
 resource "aws_cloudwatch_log_group" "processresult_log_group" {
   name              = "/aws/lambda/processresult"
   retention_in_days = 14
 }
+

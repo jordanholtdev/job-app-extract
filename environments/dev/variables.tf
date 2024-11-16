@@ -9,7 +9,7 @@ variable "tags" {
   type        = map(string)
 }
 
-variable "bucket_name" {
+variable "source_bucket_name" {
   description = "the name of the S3 bucket to create"
   type        = string
   

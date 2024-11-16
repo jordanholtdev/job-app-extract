@@ -96,30 +96,29 @@ class ReportGenerator:
         logger.info(f"Keywords saved to {file_path}")
 
     def create_html_report(self):
-        extracted_query_answers = {answer[1]: answer[2] for answer in self.parsed_data['query_answers']}
-        print(f"Type of self.comprehend_results: {type(self.comprehend_results)}")
-        
+        extracted_query_answers = {answer[1]: answer[2] for answer in self.parsed_data['query_answers']}        
+
         # Set a minimum confidence threshold
         min_score_threshold = 0.88
         high_confidence_results = []
         comprehend_keyphrase_results = self.comprehend_results.get("comprehend_results", [])
-        print("Comprehend results:", comprehend_keyphrase_results)
+        logger.info(f"Comprehend Keyphrase Results: {len(comprehend_keyphrase_results)}")
         # iterate through the comprehend_keyphrase_results 
         for result in comprehend_keyphrase_results:
             if result.get('Score') > min_score_threshold:
-                print(f"Result: {result.get('Text')} - {result.get('Score')}")
+                logger.info(f"Result: {result.get('Text')} - {result.get('Score')}")
                 high_confidence_results.append(result)
         
         comprehend_user_skills_score = self.comprehend_results.get("user_skills_score", {})
         comprehend_job_profile_score = self.comprehend_results.get("job_profile_score", {})
         comprehend_target_skills_score = self.comprehend_results.get("target_skills_score", {})
 
-        print(f"Comprehend User Skills Score: {comprehend_user_skills_score}")
-        print(f"Comprehend User Skills Matching Skills: {comprehend_user_skills_score.get('matching_keywords')}")
-        print(f"Comprehend Job Profile Score: {comprehend_job_profile_score}")
-        print(f"Comprehend Job Profile Matching Skills: {comprehend_job_profile_score.get('matching_keywords')}")
-        print(f"Comprehend Target Skills Score: {comprehend_target_skills_score.get('score')}")
-        print(f"Comprehend Target Skills Matching Skills: {comprehend_target_skills_score.get('matching_keywords')}")
+        logger.info(f"Comprehend User Skills Score: {comprehend_user_skills_score}")
+        logger.info(f"Comprehend User Skills Matching Skills: {comprehend_user_skills_score.get('matching_skills')}")
+        logger.info(f"Comprehend Job Profile Score: {comprehend_job_profile_score}")
+        logger.info(f"Comprehend Target Skills Score: {comprehend_target_skills_score}")
+        logger.info(f"Comprehend Job Profile Matching Skills: {comprehend_job_profile_score.get('matching_keywords')}")
+        logger.info(f"Comprehend Target Skills Matching Skills: {comprehend_target_skills_score.get('matching_skills')}")
 
         # comprehend_results_html = ''.join([f"<li>{result['Text']} (Score: {result['Score']})</li>" for result in self.comprehend_results if isinstance(result, dict) and 'Text' in result and 'Score' in result])
         high_confidence_results_html = ''.join([f"<li>{result['Text']}</li>" for result in high_confidence_results])
@@ -205,6 +204,21 @@ class ComprehendAnalyzer:
         score = len(matching_skills) / len(user_skills) * 100
         return {"score": score, "matching_skills": matching_skills}
 
+class S3Uploader:
+    def __init__(self, bucket_name, file_path, s3_key):
+        self.bucket_name = bucket_name
+        self.file_path = file_path
+        self.s3_key = s3_key
+        self.s3_client = boto3.client('s3')
+
+    def upload_file(self):
+        try:
+            self.s3_client.upload_file(self.file_path, self.bucket_name, self.s3_key)
+            logger.info(f"File uploaded to S3: s3://{self.bucket_name}/{self.s3_key}")
+        except Exception as e:
+            logger.error(f"Failed to upload file to S3: {e}")
+
+
 def lambda_handler(event, context):
     logger.info("Received event: %s", json.dumps(event, indent=2))
     
@@ -224,5 +238,7 @@ def lambda_handler(event, context):
         comprehend_results = analyzer.parse_comprehend_results()
         report_gen = ReportGenerator(parsed_data, comprehend_results)
         report_gen.create_html_report()
+        uploader = S3Uploader(os.environ['S3_BUCKET'], REPORT_FILE_PATH, 'job_report.html')
+        uploader.upload_file()
         return "Textract Job Succeeded"
     return "Textract Job Failed"
